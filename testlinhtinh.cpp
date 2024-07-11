@@ -5,6 +5,8 @@
 #define PI 3.14582
 #define step 1
 #define step_v 0.01
+#include<iostream>
+using namespace std;
 
 void switchpage(int page)
 {
@@ -137,10 +139,17 @@ int main()
             setcolor(11);
             settextstyle(0,0,3);
             outtextxy(359,396,const_cast<char*>("Press Any Key To Continue... "));
-            getch();
-            n++;
+               while (true) {
+        for (int i = 0; i < 256; ++i) {
+            if (GetAsyncKeyState(i) & 0x8000) {
+                goto start_program; 
+            }
         }
-
+     }
+            
+        start_program:    n++;
+    }
+delay(500);
    
 	while(1)
     {	
@@ -485,7 +494,7 @@ int main()
 			line(875,700,865,710);
 			
 		}
-		if(GetAsyncKeyState(13) )
+		if(GetAsyncKeyState(13) ) //cout<<n<<endl;
 		 break;
 		delay(1);
 		if(check==0) tmp=0;
