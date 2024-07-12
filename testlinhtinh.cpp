@@ -3,11 +3,15 @@
 #include<math.h>
 #include<string>
 #define PI 3.14582
-#define step 1
+int step=1;
+int page=0;
 #define step_v 0.01
 #include<iostream>
+#include<climits>
+#include <chrono>
+#include <thread>
+#include <iomanip>
 using namespace std;
-
 void switchpage(int page)
 {
         setactivepage(page);
@@ -15,6 +19,89 @@ void switchpage(int page)
         cleardevice();
         
 }
+    
+    std::string padZero(long long num, int width) {
+        std::ostringstream oss;
+        oss << std::setw(width) << std::setfill('0') << num;
+        return oss.str();
+    }
+class Stopwatch {
+public:
+	bool is_running;
+	 long long elapsed_time; // in milliseconds
+	  std::chrono::high_resolution_clock::time_point start_time;
+    std::thread display_thread;
+    Stopwatch() : is_running(false), elapsed_time(0) {}
+
+    void start() {
+        if (!is_running) {
+            is_running = true;
+            start_time = std::chrono::high_resolution_clock::now();
+            display_thread = std::thread(&Stopwatch::displayElapsedTime, this);
+        }
+    }
+
+void stop() {
+    if (is_running) {
+        auto end_time = std::chrono::high_resolution_clock::now();
+        elapsed_time += std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+        is_running = false;
+        if (display_thread.joinable()) {
+            display_thread.join();
+        }
+
+        // Update the display one last time with the final elapsed time
+       
+    }
+}
+
+
+    void reset() {
+        stop();
+        elapsed_time = 0;
+    }
+
+    ~Stopwatch() {
+        stop();
+        closegraph();
+    }
+
+private:
+    
+   
+   
+
+    void displayElapsedTime() {
+        while (is_running) {
+            auto current_time = elapsed_time;
+            auto now = std::chrono::high_resolution_clock::now();
+            current_time += std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time).count();
+
+            auto hours = current_time / 3600000;
+            auto minutes = (current_time % 3600000) / 60000;
+            auto seconds = (current_time % 60000) / 1000;
+            auto milliseconds = current_time % 1000;
+
+            std::string time_str = "Elapsed time: " +
+                                   padZero(hours, 2) + ":" +
+                                   padZero(minutes, 2) + ":" +
+                                   padZero(seconds, 2) + "." +
+                                   padZero(milliseconds, 3);
+
+            
+            outtextxy(1280, 110, const_cast<char*>(time_str.c_str()));
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(0));
+        }
+    }
+
+
+    
+    
+    
+
+};
+
 
 void ve(int &x1,int &y1,int &x2,int &y2,int maxX,int maxY)
 {
@@ -92,7 +179,7 @@ void vanhrongroc(int &x1,int &y1,int &x2,int &y2,int &x3,int &y3,int &x4,int &y4
 
 int main()
 { 
-
+    
     // tao cua so do hoa
     DWORD screenwidth=GetSystemMetrics(SM_CXSCREEN);
     DWORD screenHeight=GetSystemMetrics(SM_CYSCREEN);
@@ -101,12 +188,13 @@ int main()
 	int x2=200;
 	int y2=500;
 	int k=500;
+    Stopwatch stopwatch;
 	char buffer[50];
-	float tmp=0;
+	
 	int radius=20;// ban kinh vanh xe
 	int r=35;// ban kinh rong roc
 	double angle = 0;            
-    int page=0;
+    
     int n=0;
 	int pos_Car=500;
     initwindow(screenwidth,screenHeight,"",-3);
@@ -133,7 +221,7 @@ int main()
                 setcolor(11);
                 settextstyle(0,0,2);
                 outtextxy(580,350,s);
-                delay(10);
+                delay(1);
             }
             
             setcolor(11);
@@ -149,11 +237,72 @@ int main()
             
         start_program:    n++;
     }
-delay(500);
+    delay(500);
+    goto start;
+renew:
    
-	while(1)
+    stopwatch.reset();
+    
+   
+    
+start:	
+     float dis=0;
+    float tmp=0;
+    
+   settextstyle(3,0,3);
+     while(1)
     {	
-  		switchpage(page);//ham xoa trang cu di
+    
+    if (dis >=10000 ) {
+		
+	
+	//	delay(1000);
+		//getch();
+		goto renew; //khoang cach di da la qua lon
+	}
+    else {
+	    outtextxy(1150,200,const_cast<char*>("If the distance is more than 10000m it auto restarts! "));
+        settextstyle(3,0,1);
+	     //stopwatch.start();
+  
+  		 switchpage(page);
+  		
+    outtextxy(1280, 10, "Stopwatch commands:");
+    outtextxy(1280, 30, "'s' to start");
+    outtextxy(1280, 50, "'t' to stop");
+    outtextxy(1280, 70, "'r' to reset");
+    outtextxy(1280, 90, "'q' to quit");
+    if(stopwatch.is_running==0  && stopwatch.elapsed_time==0) outtextxy(1280, 110, const_cast<char*>("Elapsed time: 00:00:00,000"));
+    else if (stopwatch.is_running==0  && stopwatch.elapsed_time !=0 ) {
+    	auto current_time = stopwatch.elapsed_time;
+    auto now = std::chrono::high_resolution_clock::now();
+
+    auto hours = current_time / 3600000;
+    auto minutes = (current_time % 3600000) / 60000;
+    auto seconds = (current_time % 60000) / 1000;
+    auto milliseconds = current_time % 1000;
+
+    std::string time_str = "Elapsed time: " +
+                           padZero(hours, 2) + ":" +
+                           padZero(minutes, 2) + ":" +
+                           padZero(seconds, 2) + "." +
+                           padZero(milliseconds, 3);
+    outtextxy(1280, 110, const_cast<char*>(time_str.c_str()));
+	}
+  	if (GetAsyncKeyState('S') & 0x8000) { // Check if 'S' key is pressed
+                stopwatch.start();
+               
+    } else if (GetAsyncKeyState('T') & 0x8000) { // Check if 'T' key is pressed
+                stopwatch.stop();
+    
+                
+    } else if (GetAsyncKeyState('R') & 0x8000) { // Check if 'R' key is pressed
+                stopwatch.reset();
+                outtextxy(10, 190, "Stopwatch reset.");
+    } else if (GetAsyncKeyState('Q') & 0x8000) { // Check if 'Q' key is pressed
+                outtextxy(10, 210, "Quitting stopwatch.");
+                return 0;
+    }	
     
     //----------------- trang tri----------------------//
 	
@@ -163,9 +312,9 @@ delay(500);
 		line(40,35,40,185);
 		line(40,185,350,185);
 		line(350,185,350,35);
-		settextstyle(4,0,1);
+		//settextstyle(4,0,1);
 		outtextxy(46,40,const_cast<char*>(" C++ Project - Group 3"));
-		settextstyle(3,0,1);
+		//settextstyle(3,0,1);
 		setcolor(12);
 		outtextxy(55,70,const_cast<char*>("Trinh Quang Lam"));
 		outtextxy(55,96,const_cast<char*>("Nguyen Duc Dat"));
@@ -202,7 +351,7 @@ delay(500);
 			 		
 				//---------------------------------------//
 				
-				settextstyle(4,0,1);
+				//settextstyle(4,0,1);
 				setcolor(YELLOW);
 			 	outtextxy(610,750,const_cast<char*>("Click to move the Car!"));
 			 	outtextxy(630,770,const_cast<char*>("     Enter to exit."));
@@ -214,18 +363,18 @@ delay(500);
 	//----------Thong so van toc cua vat va xe--------//
 			
 			setcolor(11);
-			rectangle(609,126,709,221);
-			settextstyle(1,0,1);
+			rectangle(606,126,716,221);
+			//settextstyle(1,0,1);
 			setcolor(10);
-			outtextxy(618,130,const_cast<char*>("Speed"));
+			outtextxy(630,130,const_cast<char*>("Distance"));
 			setcolor(WHITE);
-			outtextxy(638,190,const_cast<char*>("m/s"));
+			outtextxy(650,190,const_cast<char*>("m"));
 	
 	//-------------------------------------------------------//
 	
 	//-------------------Chu thich-------------------------//
 	
-	settextstyle(3,0,1);
+	
 	setcolor(WHITE);
    	line(1100,450,1100,600);
    	setcolor(15);
@@ -238,8 +387,6 @@ delay(500);
    	outtextxy(800,541,const_cast<char*>("F4:Change to Light Red color"));
    	setcolor(11);
    	outtextxy(800,571,const_cast<char*>("F5:Change to Light Aqua color"));
-   	
-   	
    	setcolor(10);
    	outtextxy(1150,451,const_cast<char*>("F6:Change to Light Green color"));
    	setcolor(9);
@@ -291,6 +438,11 @@ delay(500);
 		 yr3=50+r*sin(angle+PI);
 		 xr4=662+r*cos(angle+3*PI/2); 
 		 yr4=50+r*sin(angle+3*PI/2); 
+		
+	
+ 
+		
+		
 		  
 		  if(GetAsyncKeyState(VK_F1))
         {
@@ -356,13 +508,16 @@ delay(500);
      	page=1-page;
      	
      	int check=0;// kiem tra neu nguoi dung khong bam phim di chuyen v->0
+     	
      	if(GetAsyncKeyState(VK_LEFT))
      	   if(GetAsyncKeyState(VK_RIGHT)) 
      	   {
      	   	//neu bam ca 2 nut -> chuyen mau do & v=0
      	   	tmp=0;
+     	   	dis+=tmp;
      	   	setcolor(7);
-			outtextxy(650,160,const_cast<char*>("0"));
+     	   	sprintf(buffer,"%.2f",dis); 
+			outtextxy(646,160,buffer);
 			setcolor(12);
         	line(600,675,700,675);
 			line(600,675,600,725);
@@ -398,7 +553,8 @@ delay(500);
 			
 			/* toc do di chuyen cua xe va toc do quay cau vanh xe*/
 			if(x2-88>100)
-			{
+			{   
+			    
 				x1-=step;
 	     		y1+=step;
 	     		x2-=step;
@@ -406,17 +562,18 @@ delay(500);
 	     		pos_Car-=step;
 	     		angle-=0.05;
      			x-=step;
+     			dis+=tmp;
      			tmp+=step_v; 
-				sprintf(buffer,"%.2f",tmp); 
+				sprintf(buffer,"%.2f",dis); 
 				setcolor(7);
-				outtextxy(641,160,buffer); 
+				outtextxy(646,160,buffer); 
 			}
 			
 			//canh bao
 			if(x2-88==100)
 			{
 				setcolor(7);
-				outtextxy(641,160,buffer);
+				outtextxy(646,160,buffer);
 				tmp=0;
 				setcolor(12);
 				outtextxy(616,250,const_cast<char*>(" Warning!"));
@@ -428,7 +585,8 @@ delay(500);
         else
         {
         	setcolor(7);
-			outtextxy(650,160,const_cast<char*>("0"));
+     	   	sprintf(buffer,"%.2f",dis); 
+			outtextxy(646,160,buffer);
         	setcolor(10);
 			line(600,675,700,675);
 			line(600,675,600,725);
@@ -462,16 +620,17 @@ delay(500);
 		        angle+=0.05;
 	     	    x+=step;	 
 				tmp+=step_v; 
-				sprintf(buffer,"%.2f", tmp); 
+				dis+=tmp;
+				sprintf(buffer,"%.2f", dis); 
 				setcolor(7);
-				outtextxy(641,160,buffer); 
+				outtextxy(646,160,buffer); 
 			}
 			
 			//canh bao neu xe vuot qua mat phang nghieng
 			if(x2+13==450)
 			{
 				setcolor(7);
-				outtextxy(641,160,buffer);
+				outtextxy(646,160,buffer);
 				tmp=0;
 				setcolor(12);
 				outtextxy(616,250,const_cast<char*>(" Warning!"));
@@ -482,8 +641,7 @@ delay(500);
         
         else
         {
-        	//setcolor(7);
-			//outtextxy(650,160,const_cast<char*>("0"));
+
         	setcolor(10);
 			line(800,675,900,675);
 			line(800,675,800,725);
@@ -499,7 +657,7 @@ delay(500);
 		delay(1);
 		if(check==0) tmp=0;
 		// bien check de kiem tra neu khong bam phim di chuyen thi van toc se cap nhat ve 0
-		
+      }
 	}
      	
     getch();
